@@ -1,0 +1,13 @@
+# What is this repo?
+The simple popular movies app for the Android Udacity course.
+
+# What I am trying to accomplish?
+Well, first I will be using the Material Design principles and theme, which can backfire. Most of all I am hoping to write my first big-ish
+Android app.
+
+# What is your motivation for trying Android Development?
+Learning new things is always great, being able to build my own apps from scratch is a nice bonus. And in my new workplace I need to sometimes
+write Android code, so there is that.
+
+# And finally, What to watch?
+There are many great movies available, in a myriad of different platforms, Download the app, and the most popular ones out there!
