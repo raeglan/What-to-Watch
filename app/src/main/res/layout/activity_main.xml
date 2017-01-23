@@ -1,21 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context="de.alfingo.whattowatch.MainActivity">
-
-    <android.support.v7.widget.RecyclerView
-        android:id="@+id/rv_main_movies_grid"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
+    android:layout_height="match_parent">
     
     <TextView
         android:id="@+id/tv_main_error_msg"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/error_message"
+        android:textSize="22sp"
+        android:layout_gravity="bottom|center_horizontal"
+        android:textAlignment="center"
+        android:visibility="invisible"
+        android:background="?attr/colorPrimaryDark" />
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/rv_main_movies_grid"
+        android:padding="4dp"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
+
+    <!-- TODO: Replace this will a beautiful solution -->
+    <ProgressBar
+        android:id="@+id/pb_main_loading"
+        android:layout_width="42dp"
+        android:layout_height="42dp"
+        android:layout_gravity="center"
         android:visibility="invisible"/>
 
 </FrameLayout>

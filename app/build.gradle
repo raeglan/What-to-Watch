@@ -28,5 +28,7 @@ dependencies {
     compile 'com.android.support:design:25.1.0'
     // The picasso library will make things a bit easier.
     compile 'com.squareup.picasso:picasso:2.5.2'
+    // The Gson Library will handle JSON object conversions for us.
+    compile 'com.google.code.gson:gson:2.8.0'
     testCompile 'junit:junit:4.12'
 }
