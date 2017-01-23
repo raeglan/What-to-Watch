@@ -1,31 +1,35 @@
 package de.alfingo.whattowatch;
 
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
-import android.view.View;
+import android.support.v7.widget.GridLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements GridMovieAdapter.GridMovieClickListener{
+
+    /**
+     * The one class responsible for keeping my app green.
+     */
+    private RecyclerView mRecyclerView;
+
+    /**
+     * For debugging purposes. To remove when not needed.
+     */
+    private Toast mToast;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
+        // setting our recycler grid view.
+        mRecyclerView = (RecyclerView) findViewById(R.id.rv_main_movies_grid);
+        RecyclerView.LayoutManager layoutManager = new GridLayoutManager(this, 3);
+        mRecyclerView.setAdapter(new GridMovieAdapter(this));
+        mRecyclerView.setLayoutManager(layoutManager);
     }
 
     @Override
@@ -48,5 +52,14 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onClick(int movieID) {
+        if(mToast != null)
+            mToast.cancel();
+        mToast = Toast.makeText(this, "Movie clicked with ID: " + movieID, Toast.LENGTH_SHORT);
+        mToast.show();
+        // TODO: 23.01.2017 Perform DB Query for the movie in question and open a new Activity with the detailed view.
     }
 }
