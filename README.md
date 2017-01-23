@@ -1,6 +1,13 @@
 # What is this repo?
 The simple popular movies app for the Android Udacity course.
 
+# What to do before building the app?!
+I didn't commit any API key I might use(for obvious reasons), so if you want to build it on your own you should do the following:
+- Generate an API Key on https://www.themoviedb.org/
+- Create an interface inside the Utilities package with the name `APIKeys`
+- On the interface declare `String MOVIEDB_API_KEY = "YOUR_API_KEY"`
+- Compile the code, install the APK and be happy.
+
 # What I am trying to accomplish?
 Well, first I will be using the Material Design principles and theme, which can backfire. Most of all I am hoping to write my first big-ish
 Android app.
