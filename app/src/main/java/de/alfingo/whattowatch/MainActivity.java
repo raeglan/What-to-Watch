@@ -1,7 +1,11 @@
 package de.alfingo.whattowatch;
 
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -13,8 +17,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.gson.JsonParseException;
-
-import org.json.JSONException;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -42,31 +44,48 @@ public class MainActivity extends AppCompatActivity implements GridMovieAdapter.
      */
     private GridMovieAdapter mMovieAdapter;
 
-    private boolean taskRunning;
+    /**
+     * If the loading task is currently running.
+     */
+    private AsyncTask taskRunning;
 
     /**
      * For debugging purposes. To remove when not needed.
      */
     private Toast mToast;
 
+    /**
+     * The shared preferences file for this app
+     */
+    private SharedPreferences sharedPreferences;
+
+    /**
+     * The key for saving our sort.
+     */
+    private String KEY_SORT_BY;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        sharedPreferences = getSharedPreferences(getString(R.string.pref_shared_preferences),
+                MODE_PRIVATE);
+        KEY_SORT_BY = getString(R.string.pref_key_sort);
+
         // getting all the views from the layout.
         mRecyclerView = (RecyclerView) findViewById(R.id.rv_main_movies_grid);
         mErrorView = (TextView) findViewById(R.id.tv_main_error_msg);
         mProgressBar = (ProgressBar) findViewById(R.id.pb_main_loading);
-        taskRunning = false;
 
         // setting the refresh button
         mErrorView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 mMovieAdapter.setMovies(null);
-                if(!taskRunning)
-                    new FetchMoviesTask().execute();
+                if(taskRunning == null || taskRunning.getStatus().equals(AsyncTask.Status.FINISHED))
+                    startFetchMoviesTask(-1);
             }
         });
 
@@ -78,7 +97,7 @@ public class MainActivity extends AppCompatActivity implements GridMovieAdapter.
         mRecyclerView.setHasFixedSize(true); // TODO: 23.01.2017 will not be the case after "infinite"(read: multi-page) scrolling is implemented.
 
         // starting the fetching task
-        new FetchMoviesTask().execute();
+        startFetchMoviesTask(-1);
     }
 
     @Override
@@ -96,20 +115,33 @@ public class MainActivity extends AppCompatActivity implements GridMovieAdapter.
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
+        switch (id) {
+            case R.id.action_settings:
+                Toast.makeText(this, R.string.under_construction, Toast.LENGTH_SHORT).show();
+                return true;
+            case R.id.action_main_sort: {
+                String[] sortMethods = getResources().getStringArray(R.array.sorting_methods);
+                AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                builder
+                        .setTitle(R.string.sort_by)
+                        .setItems(sortMethods, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                sharedPreferences.edit().putInt(KEY_SORT_BY, which).apply();
+                                startFetchMoviesTask(which);
+                            }
+                        }).create().show();
+            }
         }
 
         return super.onOptionsItemSelected(item);
     }
 
     @Override
-    public void onClick(int movieID) {
-        if (mToast != null)
-            mToast.cancel();
-        mToast = Toast.makeText(this, "Movie clicked with ID: " + movieID, Toast.LENGTH_SHORT);
-        mToast.show();
-        // TODO: 23.01.2017 Perform DB Query for the movie in question and open a new Activity with the detailed view.
+    public void onClick(Movie movieClicked) {
+        Intent detailsIntent = new Intent(this, MovieDetailsActivity.class);
+        detailsIntent.putExtra(Movie.KEY_EXTRA_MOVIE, movieClicked);
+        startActivity(detailsIntent);
     }
 
     /**
@@ -123,6 +155,27 @@ public class MainActivity extends AppCompatActivity implements GridMovieAdapter.
     }
 
     /**
+     * Starts a new fetch task with the desired sorting, defined in strings.xml as an array.
+     * @param sortBy the desired sorting method. -1 if default should be used.
+     */
+    private void startFetchMoviesTask(int sortBy) {
+        String[] sortMethods = getResources().getStringArray(R.array.sorting_methods);
+        if(sortBy < 0 || sortBy >= sortMethods.length)
+            sortBy = sharedPreferences.getInt(KEY_SORT_BY, 0);
+        String chosenMethod;
+        if (sortMethods[sortBy].equals(getString(R.string.top_rated))) {
+            chosenMethod = MovieDBUtil.TOP_PATH;
+        } else {
+            chosenMethod = MovieDBUtil.POPULAR_PATH;
+        }
+
+        mMovieAdapter.setMovies(null);
+        if(taskRunning != null)
+            taskRunning.cancel(true);
+        taskRunning = new FetchMoviesTask().execute(chosenMethod);
+    }
+
+    /**
      * The task responsible for getting the information back from the MovieDB server. Everything
      * is done with the help of the Utilities classes.
      */
@@ -130,7 +183,6 @@ public class MainActivity extends AppCompatActivity implements GridMovieAdapter.
 
         @Override
         protected void onPreExecute() {
-            taskRunning = true;
             super.onPreExecute();
             mProgressBar.setVisibility(View.VISIBLE);
         }
@@ -139,7 +191,7 @@ public class MainActivity extends AppCompatActivity implements GridMovieAdapter.
         protected ArrayList<Movie> doInBackground(String... params) {
             ArrayList<Movie> movies = null;
             try {
-                movies = MovieDBUtil.getAllMovies(null, 1);
+                movies = MovieDBUtil.getAllMovies(params[0], 1);
                 if (movies != null)
                     for (int i = 2; i < 10; i++)
                         movies.addAll(MovieDBUtil.getAllMovies(null, i));
@@ -155,7 +207,6 @@ public class MainActivity extends AppCompatActivity implements GridMovieAdapter.
         @Override
         protected void onPostExecute(ArrayList<Movie> movies) {
             super.onPostExecute(movies);
-            taskRunning = false;
             mProgressBar.setVisibility(View.INVISIBLE);
             showError(movies == null);
             mMovieAdapter.setMovies(movies);

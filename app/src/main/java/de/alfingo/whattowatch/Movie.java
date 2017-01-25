@@ -4,11 +4,13 @@ import java.io.Serializable;
 import java.util.Date;
 
 /**
- * The Movie Object, as received from MovieDB.
+ * The Movie Object, as received from MovieDB, created automatically with Gson.
  * @author Rafael
  * @since 23.01.2017
  */
 public class Movie implements Serializable {
+    public static String KEY_EXTRA_MOVIE = "movie_key_extra";
+    // everything here must be named exactly as in the DB.
     public String poster_path;
     public String overview;
     public Date release_date;
@@ -20,5 +22,5 @@ public class Movie implements Serializable {
     public String backdrop_path;
     public double popularity;
     public int vote_count;
-    public double vote_average;
+    public float vote_average;
 }

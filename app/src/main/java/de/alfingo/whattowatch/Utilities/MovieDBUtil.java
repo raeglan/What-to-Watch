@@ -36,29 +36,33 @@ public abstract class MovieDBUtil {
     /**
      * URLs for the MovieDB utilities
      */
-    private static final String MOVIEDB_URL =
-            "https://api.themoviedb.org/3/",
+    private static final String
+            MOVIEDB_URL = "https://api.themoviedb.org/3/",
             IMAGE_SERVER_URL = "http://image.tmdb.org/t/p";
 
     /**
      * Different query parameters
      */
-    final private static String API_PARAM = "api_key",
+    final private static String
+            API_PARAM = "api_key",
             PAGE_PARAM = "page",
             REGION_PARAM = "region",
             LANGUAGE_PARAM = "language";
     /**
      * The paths for different queries
      */
-    final public static String POPULAR_PATH = "popular",
+    final public static String
+            POPULAR_PATH = "popular",
             TOP_PATH = "top_rated",
             MOVIE_PATH = "movie",
-            IMAGE_SIZE_185_PATH = "w185";
+            IMAGE_SIZE_185_PATH = "w185",
+            IMAGE_SIZE_ORIGINAL_PATH = "original";
 
     /**
      * Answer constants from the MovieDB JSON
      */
-    final private static String RESULTS_ANSWER = "results",
+    final private static String
+            RESULTS_ANSWER = "results",
             MAX_PAGES_ANSWER = "total_pages";
 
     /**
@@ -74,6 +78,7 @@ public abstract class MovieDBUtil {
      */
     public static ArrayList<Movie> getAllMovies(@Nullable String sorting, int page) throws JsonParseException, IOException {
         int pageParamValue = page > 1 ? page : 1;
+        // should extend to a switch case when more sorting methods are available
         String sortPath = (TOP_PATH.equals(sorting)) ? TOP_PATH : POPULAR_PATH;
         String[][] queries = {{PAGE_PARAM, String.valueOf(pageParamValue)}};
         URL builtURL = buildUrl(queries, MOVIE_PATH, sortPath);
@@ -103,9 +108,10 @@ public abstract class MovieDBUtil {
      * @param size        which size it should be.
      * @return the URL, ready to be picasso-ed
      */
-    public static Uri getPictureUri(@NonNull String picturePath, @Nullable String size) {
+    public static Uri getPictureUri(@NonNull String picturePath, @Nullable String pSize) {
+        String size = pSize != null? pSize : IMAGE_SIZE_185_PATH;
         return Uri.parse(IMAGE_SERVER_URL).buildUpon()
-                .appendPath(IMAGE_SIZE_185_PATH)
+                .appendPath(size)
                 .appendEncodedPath(picturePath).build();
     }
 

@@ -3,13 +3,13 @@ package de.alfingo.whattowatch;
 import android.content.Context;
 import android.net.Uri;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
@@ -61,10 +61,14 @@ class GridMovieAdapter extends RecyclerView.Adapter<GridMovieAdapter.GridMovieVi
         Context context = holder.itemView.getContext();
         Movie movie = mMovies.get(position);
         holder.mMovieTitle.setText(movie.title);
+        // sets the text visible again
+        holder.mMovieTitle.setVisibility(View.VISIBLE);
+        holder.mMoviePoster.setContentDescription(movie.title);
         Uri posterUri = MovieDBUtil.getPictureUri(movie.poster_path, null);
         Picasso.with(context)
                 .load(posterUri)
-                .into(holder.mMoviePoster);
+                .placeholder(R.drawable.ic_main_poster_placeholder)
+                .into(holder.mMoviePoster, holder);
     }
 
     @Override
@@ -86,15 +90,19 @@ class GridMovieAdapter extends RecyclerView.Adapter<GridMovieAdapter.GridMovieVi
     interface GridMovieClickListener {
         /**
          * When a movie is clicked this method is called by the view holder.
-         * @param movieID the movie ID for the MovieDB API call with more infos.
+         * @param movieClicked the movie wrapper object with all the infos to prepopulate the
+         *                     details page.
          */
-        void onClick(int movieID);
+        void onClick(Movie movieClicked);
     }
 
     /**
-     * A simple ViewHolder for storing the item view for our movies grid.
+     * A simple ViewHolder for storing the item view for our movies grid. This implements the
+     * OnClickListener so it will be able to handle Clicks and a callback from Picasso to Display
+     * the title accordingly.
      */
-    class GridMovieViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
+    class GridMovieViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener,
+            Callback{
         /**
          * White movie title
          */
@@ -108,15 +116,30 @@ class GridMovieAdapter extends RecyclerView.Adapter<GridMovieAdapter.GridMovieVi
             super(itemView);
             mMoviePoster = (ImageView) itemView.findViewById(R.id.iv_item_poster);
             mMovieTitle = (TextView) itemView.findViewById(R.id.tv_item_title);
-            mMovieTitle.setAlpha(0); // TODO: 23.01.2017 See if the title is even needed. Probably not.
             itemView.setOnClickListener(this);
         }
 
+        /**
+         * If clicked we want to pass the movie, and start the details view.
+         * @param v which view was clicked(not used)
+         */
         @Override
         public void onClick(View v) {
             int adapterPosition = getAdapterPosition();
-            int movieID = mMovies.get(adapterPosition).id;
-            mMovieClickListener.onClick(movieID);
+            Movie movieClicked = mMovies.get(adapterPosition);
+            mMovieClickListener.onClick(movieClicked);
         }
+
+        /**
+         * When the image is successfully loaded we make our Text invisible.
+         */
+        @Override
+        public void onSuccess() {
+            mMovieTitle.setVisibility(View.INVISIBLE);
+        }
+
+        /** Do nothing */
+        @Override
+        public void onError() {}
     }
 }
