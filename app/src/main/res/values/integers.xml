@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- These should match the order in the String Array containing all the display types -->
+    <integer name="top_rated_index">0</integer>
+    <integer name="most_popular_index">1</integer>
+    <integer name="favorites_index">2</integer>
+</resources>

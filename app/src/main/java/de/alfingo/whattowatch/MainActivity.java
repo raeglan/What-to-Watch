@@ -1,11 +1,11 @@
 package de.alfingo.whattowatch;
 
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.v7.app.AlertDialog;
+import android.support.annotation.NonNull;
+import android.support.design.widget.BottomNavigationView;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -21,6 +21,10 @@ import com.google.gson.JsonParseException;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import butterknife.BindString;
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import de.alfingo.whattowatch.Utilities.EndlessScrollingRecyclerView;
 import de.alfingo.whattowatch.Utilities.MovieDBUtil;
 
 public class MainActivity extends AppCompatActivity implements GridMovieAdapter.GridMovieClickListener {
@@ -28,26 +32,36 @@ public class MainActivity extends AppCompatActivity implements GridMovieAdapter.
     /**
      * The one class responsible for keeping my app green.
      */
-    private RecyclerView mRecyclerView;
+    @BindView(R.id.rv_main_movies_grid)
+    RecyclerView mRecyclerView;
 
     /**
      * For displaying error messages.
      */
-    private TextView mErrorView;
+    @BindView(R.id.tv_main_error_msg)
+    TextView mErrorView;
 
     /**
      * Showing that we are loading.
      */
-    private ProgressBar mProgressBar;
+    @BindView(R.id.pb_main_loading)
+    ProgressBar mProgressBar;
+
+    /**
+     * The bottom navigation view, used for changing sorting and displaying the favorites.
+     */
+    @BindView(R.id.navigation)
+    BottomNavigationView mBottomNavigationView;
+
     /**
      * The adapter for our recycler view
      */
-    private GridMovieAdapter mMovieAdapter;
+    GridMovieAdapter mMovieAdapter;
 
     /**
      * If the loading task is currently running.
      */
-    private AsyncTask taskRunning;
+    AsyncTask taskRunning;
 
     /**
      * For debugging purposes. To remove when not needed.
@@ -60,31 +74,72 @@ public class MainActivity extends AppCompatActivity implements GridMovieAdapter.
     private SharedPreferences sharedPreferences;
 
     /**
+     * The current display, used for avoiding double fetching of movies.
+     */
+    private int mCurrentDisplay;
+
+    /**
      * The key for saving our sort.
      */
-    private String KEY_SORT_BY;
+    @BindString(R.string.pref_key_display)
+    String KEY_DISPLAY;
 
+    /**
+     * The listener here is going to support our bottom navigation.
+     */
+    BottomNavigationView.OnNavigationItemSelectedListener mItemSelectedListener =
+            new BottomNavigationView.OnNavigationItemSelectedListener() {
+                @Override
+                public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+                    int selectedDisplay;
+                    switch (item.getItemId()) {
+                        case R.id.navigation_top_rated:
+                            selectedDisplay = 0;
+                            break;
+                        case R.id.navigation_popular:
+                            selectedDisplay = 1;
+                            break;
+                        case R.id.navigation_favorites:
+                            selectedDisplay = 2;
+                            // TODO: 25.03.2017 Make favorites great!
+                            return false;
+                        default:
+                            throw new UnsupportedOperationException
+                                    ("Item not known: " + item.getItemId());
+                    }
+
+                    // if we are already in the display selected we just scroll to the top.
+                    if (mCurrentDisplay == selectedDisplay && mRecyclerView.getChildCount() > 0) {
+                        mRecyclerView.smoothScrollToPosition(0);
+                    } else
+                        startFetchMoviesTask(selectedDisplay);
+
+                    mCurrentDisplay = selectedDisplay;
+
+                    return true;
+                }
+            };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        ButterKnife.bind(this);
 
+        // getting the shared preferences
         sharedPreferences = getSharedPreferences(getString(R.string.pref_shared_preferences),
                 MODE_PRIVATE);
-        KEY_SORT_BY = getString(R.string.pref_key_sort);
 
-        // getting all the views from the layout.
-        mRecyclerView = (RecyclerView) findViewById(R.id.rv_main_movies_grid);
-        mErrorView = (TextView) findViewById(R.id.tv_main_error_msg);
-        mProgressBar = (ProgressBar) findViewById(R.id.pb_main_loading);
+        // setting the bottom navigation listener and the checked item
+        mBottomNavigationView.setOnNavigationItemSelectedListener(mItemSelectedListener);
+        mCurrentDisplay = 0;
 
         // setting the refresh button
         mErrorView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 mMovieAdapter.setMovies(null);
-                if(taskRunning == null || taskRunning.getStatus().equals(AsyncTask.Status.FINISHED))
+                if (taskRunning == null || taskRunning.getStatus().equals(AsyncTask.Status.FINISHED))
                     startFetchMoviesTask(-1);
             }
         });
@@ -94,7 +149,13 @@ public class MainActivity extends AppCompatActivity implements GridMovieAdapter.
         mMovieAdapter = new GridMovieAdapter(this);
         mRecyclerView.setAdapter(mMovieAdapter);
         mRecyclerView.setLayoutManager(layoutManager);
-        mRecyclerView.setHasFixedSize(true); // TODO: 23.01.2017 will not be the case after "infinite"(read: multi-page) scrolling is implemented.
+        EndlessScrollingRecyclerView endlessScrollingListener =
+                new EndlessScrollingRecyclerView((GridLayoutManager) layoutManager) {
+                    @Override
+                    public void onLoadMore(int page, int totalItemsCount, RecyclerView view) {
+
+                    }
+                };
 
         // starting the fetching task
         startFetchMoviesTask(-1);
@@ -119,19 +180,6 @@ public class MainActivity extends AppCompatActivity implements GridMovieAdapter.
             case R.id.action_settings:
                 Toast.makeText(this, R.string.under_construction, Toast.LENGTH_SHORT).show();
                 return true;
-            case R.id.action_main_sort: {
-                String[] sortMethods = getResources().getStringArray(R.array.sorting_methods);
-                AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                builder
-                        .setTitle(R.string.sort_by)
-                        .setItems(sortMethods, new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                sharedPreferences.edit().putInt(KEY_SORT_BY, which).apply();
-                                startFetchMoviesTask(which);
-                            }
-                        }).create().show();
-            }
         }
 
         return super.onOptionsItemSelected(item);
@@ -156,30 +204,29 @@ public class MainActivity extends AppCompatActivity implements GridMovieAdapter.
 
     /**
      * Starts a new fetch task with the desired sorting, defined in strings.xml as an array.
+     *
      * @param sortBy the desired sorting method. -1 if default should be used.
+     * @param page   which page should be fetched.
      */
-    private void startFetchMoviesTask(int sortBy) {
-        String[] sortMethods = getResources().getStringArray(R.array.sorting_methods);
-        if(sortBy < 0 || sortBy >= sortMethods.length)
-            sortBy = sharedPreferences.getInt(KEY_SORT_BY, 0);
-        String chosenMethod;
-        if (sortMethods[sortBy].equals(getString(R.string.top_rated))) {
-            chosenMethod = MovieDBUtil.TOP_PATH;
-        } else {
-            chosenMethod = MovieDBUtil.POPULAR_PATH;
+    private void startFetchMoviesTask(int sortBy, int page) {
+        String[] sortMethods = getResources().getStringArray(R.array.display_methods);
+        if (sortBy < 0 || sortBy >= sortMethods.length) {
+            // TODO: 25.03.2017 Change how the fetch movie handle no sorting selected.
+            // sortBy = sharedPreferences.getInt(KEY_DISPLAY, 0);
+            sortBy = 0;
         }
 
         mMovieAdapter.setMovies(null);
-        if(taskRunning != null)
+        if (taskRunning != null)
             taskRunning.cancel(true);
-        taskRunning = new FetchMoviesTask().execute(chosenMethod);
+        taskRunning = new FetchMoviesTask().execute(sortBy);
     }
 
     /**
      * The task responsible for getting the information back from the MovieDB server. Everything
      * is done with the help of the Utilities classes.
      */
-    private class FetchMoviesTask extends AsyncTask<String, Void, ArrayList<Movie>> {
+    private class FetchMoviesTask extends AsyncTask<Integer, Void, ArrayList<Movie>> {
 
         @Override
         protected void onPreExecute() {
@@ -188,13 +235,13 @@ public class MainActivity extends AppCompatActivity implements GridMovieAdapter.
         }
 
         @Override
-        protected ArrayList<Movie> doInBackground(String... params) {
+        protected ArrayList<Movie> doInBackground(Integer... params) {
             ArrayList<Movie> movies = null;
             try {
-                movies = MovieDBUtil.getAllMovies(params[0], 1);
-                if (movies != null)
-                    for (int i = 2; i < 10; i++)
-                        movies.addAll(MovieDBUtil.getAllMovies(null, i));
+                int pageIndex = 1;
+                if (params.length > 1)
+                    pageIndex = params[1];
+                movies = MovieDBUtil.getAllMovies(MainActivity.this, params[0], pageIndex);
             } catch (JsonParseException e) {
                 e.printStackTrace();
             } catch (IOException e) {

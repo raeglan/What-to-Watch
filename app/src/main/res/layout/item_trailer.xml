@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:padding="@dimen/activity_small_half_margin">
+
+    <ImageView
+        android:id="@+id/iv_trailer_thumbnail"
+        android:layout_width="160dp"
+        android:layout_height="90dp" />
+
+    <TextView
+        android:id="@+id/tv_trailer_name"
+        android:layout_width="160dp"
+        android:paddingLeft="@dimen/text_small_margin"
+        android:paddingRight="@dimen/text_small_margin"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal|bottom"
+        android:gravity="center_horizontal"
+        tools:text="Trailer 1"
+        android:textAppearance="@style/TextAppearance.AppCompat.Caption"/>
+</FrameLayout>

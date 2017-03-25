@@ -1,5 +1,7 @@
 package de.alfingo.whattowatch.Utilities;
 
+import android.content.Context;
+import android.content.res.Resources;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -21,6 +23,7 @@ import java.util.Map;
 import java.util.Set;
 
 import de.alfingo.whattowatch.Movie;
+import de.alfingo.whattowatch.R;
 
 /**
  * A class for getting all the information from MovieDB that is needed. This will create an
@@ -69,6 +72,7 @@ public abstract class MovieDBUtil {
      * This will get all the movies that will fill our Grid, for unlimited scrolling, the page
      * param is needed.
      *
+     * @param context For getting our sorting methods.
      * @param sorting Which sorting should be used, the available ones are listed in the MovieDB
      *                site, by default it will sort by popularity.
      * @param page    Which page should be returned, by default it will return page one.
@@ -76,10 +80,12 @@ public abstract class MovieDBUtil {
      * @throws IOException        If something with the connection is not right.
      * @throws JsonParseException If the JSON Object was malformed, or the site is down.
      */
-    public static ArrayList<Movie> getAllMovies(@Nullable String sorting, int page) throws JsonParseException, IOException {
+    public static ArrayList<Movie> getAllMovies(@NonNull Context context, Integer sorting, int page)
+            throws JsonParseException, IOException {
+        int topRatedConstant = context.getResources().getInteger(R.integer.top_rated_index);
         int pageParamValue = page > 1 ? page : 1;
         // should extend to a switch case when more sorting methods are available
-        String sortPath = (TOP_PATH.equals(sorting)) ? TOP_PATH : POPULAR_PATH;
+        String sortPath = (topRatedConstant == sorting) ? TOP_PATH : POPULAR_PATH;
         String[][] queries = {{PAGE_PARAM, String.valueOf(pageParamValue)}};
         URL builtURL = buildUrl(queries, MOVIE_PATH, sortPath);
 
@@ -105,7 +111,7 @@ public abstract class MovieDBUtil {
      * Returns the URL path to a picture in the MovieDB server.
      *
      * @param picturePath The path of the picture, to be appended.
-     * @param size        which size it should be.
+     * @param pSize        which size it should be.
      * @return the URL, ready to be picasso-ed
      */
     public static Uri getPictureUri(@NonNull String picturePath, @Nullable String pSize) {
@@ -123,7 +129,7 @@ public abstract class MovieDBUtil {
      * @return The URL to use to query the weather server.
      */
     private static URL buildUrl(@Nullable String[][] queries, @NonNull String... extraPaths) {
-        // TODO: 23.01.2017 Ask if my generalized/modular approach here is good, or just to complicated.
+
         Uri.Builder builder = Uri.parse(MOVIEDB_URL).buildUpon();
         // appends all the extra paths
         for (String path : extraPaths) {

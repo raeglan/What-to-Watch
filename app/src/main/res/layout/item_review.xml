@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingTop="@dimen/text_small_margin"
+    android:paddingBottom="@dimen/text_small_margin">
+
+    <TextView
+        android:id="@+id/tv_review_content"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+        tools:text="Lorem ipsum, doloer kd alswdmas ldlkasmld mdd4ma.\nlksdlkdamsldasmlkdamdlksalkamsd- askdm a- asd  sd ada s.das ..asd. as.d asdas d." />
+
+    <TextView
+        android:id="@+id/tv_review_author"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end"
+        android:textAppearance="@style/TextAppearance.AppCompat.Caption"
+        tools:text="Rafael Miranda" />
+</LinearLayout>

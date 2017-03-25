@@ -85,6 +85,14 @@ class GridMovieAdapter extends RecyclerView.Adapter<GridMovieAdapter.GridMovieVi
     }
 
     /**
+     * Adds a new set of movies to an already existing list.
+     */
+    void addMovies(ArrayList<Movie> movies) {
+        mMovies.addAll(movies);
+        notifyDataSetChanged();
+    }
+
+    /**
      * The click action for a movie.
      */
     interface GridMovieClickListener {

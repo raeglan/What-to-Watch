@@ -1,9 +1,9 @@
 <resources>
     <!-- Not to be used as String in any view, just the name of the preferences file -->
-    <string translatable="false" name="pref_shared_preferences">
+    <string name="pref_shared_preferences" translatable="false">
         de.alfingo.whattowatch.preferences
     </string>
-    <string translatable="false" name="pref_key_sort">key_sort_preference</string>
+    <string name="pref_key_display" translatable="false">key_sort_preference</string>
 
     <string name="app_name">What to Watch</string>
     <string name="action_settings">Settings</string>
@@ -12,14 +12,15 @@
     </string>
     <string name="error_message">No connection to the internet\nor the MovieDB servers are down.\nClick to Refresh!</string>
     <string name="poster_content_description">A poster for the movie.</string>
-    <string translatable="false" name="placeholder_movie_title">Movie Title</string>
+    <string name="placeholder_movie_title" translatable="false">Movie Title</string>
     <string name="movie_description">Description:</string>
     <string name="release_date">Release date:</string>
-    <string formatted="false" name="ratings_description">%1.1f Stars\nFrom %d ratings</string>
+    <string name="ratings_description" formatted="false">%1.1f Stars\nFrom %d ratings</string>
     <string name="sort">Sort</string>
-    <string-array name="sorting_methods">
-        <item>@string/most_popular</item>
+    <string-array name="display_methods">
         <item>@string/top_rated</item>
+        <item>@string/most_popular</item>
+        <item>@string/favorites</item>
     </string-array>
     <string name="top_rated">Top-rated</string>
     <string name="most_popular">Most popular</string>
@@ -27,5 +28,11 @@
         "Maybe someday this will work, for now, it doesn't. Try clicking somewhere else."
     </string>
     <string name="sort_by">Sort by:</string>
+    <string name="reviews_label">Reviews:</string>
+    <string name="title_activity_movies">movies</string>
+    <string name="title_home">Home</string>
+    <string name="title_dashboard">Dashboard</string>
+    <string name="title_notifications">Notifications</string>
+    <string name="favorites">Favorites</string>
 
 </resources>

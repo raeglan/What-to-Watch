@@ -3,6 +3,14 @@
     <dimen name="activity_horizontal_margin">16dp</dimen>
     <dimen name="activity_vertical_margin">16dp</dimen>
     <dimen name="fab_margin">16dp</dimen>
+    <dimen name="activity_small_margin">8dp</dimen>
+    <dimen name="activity_small_half_margin">4dp</dimen>
     <dimen name="app_bar_height">240dp</dimen>
     <dimen name="text_margin">16dp</dimen>
+    <dimen name="text_small_margin">8dp</dimen>
+    <!-- Text sizes. -->
+    <dimen name="text_size_very_small">12sp</dimen>
+    <dimen name="text_size_small">14sp</dimen>
+    <dimen name="text_size_normal">18sp</dimen>
+    <dimen name="text_size_big">22sp</dimen>
 </resources>

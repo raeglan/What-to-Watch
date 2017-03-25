@@ -29,6 +29,9 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="de.alfingo.whattowatch.MainActivity" />
         </activity>
+        <activity
+            android:name=".movies"
+            android:label="@string/title_activity_movies"></activity>
     </application>
 
 </manifest>
