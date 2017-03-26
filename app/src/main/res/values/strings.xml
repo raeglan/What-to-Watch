@@ -34,6 +34,6 @@
     <string name="favorites">Favorites</string>
     <string name="trailers_label">Trailers:</string>
     <string name="only_youtube_supported">Only YouTube videos are supported at the moment.</string>
-    <string name="no_favorites">No film saved marked as favorite yet!</string>
+    <string name="no_favorites">No film marked as favorite yet :(</string>
 
 </resources>
