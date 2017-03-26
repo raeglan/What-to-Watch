@@ -1,23 +1,23 @@
-package de.alfingo.whattowatch.Utilities;
+package de.alfingo.whattowatch.utilities;
 
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
 
-// TODO 25.01.2017 Use this class for endless scrolling, just need to add it as a ScrollListener and implement the abstract methods
 public abstract class EndlessScrollingRecyclerView extends RecyclerView.OnScrollListener {
     // The minimum amount of items to have below your current scroll position
     // before loading more.
     private int visibleThreshold = 9;
+    // Sets the starting page index
+    private int startingPageIndex = 1;
     // The current offset index of data you have loaded
-    private int currentPage = 0;
+    private int currentPage = startingPageIndex;
     // The total number of items in the dataset after the last load
     private int previousTotalItemCount = 0;
     // True if we are still waiting for the last set of data to load.
     private boolean loading = true;
-    // Sets the starting page index
-    private int startingPageIndex = 0;
+
 
     /**
      * The last page, after this no loading should be done.

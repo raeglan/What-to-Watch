@@ -1,7 +1,6 @@
-package de.alfingo.whattowatch.Utilities;
+package de.alfingo.whattowatch.utilities;
 
 import android.content.Context;
-import android.content.res.Resources;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -18,9 +17,6 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Map;
-import java.util.Set;
 
 import de.alfingo.whattowatch.Movie;
 import de.alfingo.whattowatch.R;
@@ -58,6 +54,8 @@ public abstract class MovieDBUtil {
             POPULAR_PATH = "popular",
             TOP_PATH = "top_rated",
             MOVIE_PATH = "movie",
+            REVIEWS_PATH = "reviews",
+            VIDEOS_PATH = "videos",
             IMAGE_SIZE_185_PATH = "w185",
             IMAGE_SIZE_ORIGINAL_PATH = "original";
 
@@ -105,6 +103,47 @@ public abstract class MovieDBUtil {
         }
 
         return moviesList.isEmpty() ? null : moviesList;
+    }
+
+    /**
+     * Gets all the movie details, reviews and videos included.
+     * @return a movie object with all the information needed on the details page.
+     * @throws IOException if something didn't go quite as planned, duh!
+     */
+    public static Movie getMovieDetails(String movieID) throws IOException {
+        Gson gson = new Gson();
+
+        // getting the movie object
+        URL movieUrl = buildUrl(null, MOVIE_PATH, movieID);
+        String movieDBAnswer = NetworkUtils.getResponseFromHttpUrl(movieUrl);
+        JsonObject jsonAnswer = new JsonParser().parse(movieDBAnswer).getAsJsonObject();
+        Movie movie = gson.fromJson(jsonAnswer, Movie.class);
+
+        // now to get the reviews
+        URL reviewsUrl = buildUrl(null, MOVIE_PATH, movieID, REVIEWS_PATH);
+        String reviewsAnswer = NetworkUtils.getResponseFromHttpUrl(reviewsUrl);
+        JsonArray reviewsArray = new JsonParser()
+                .parse(reviewsAnswer)
+                .getAsJsonObject()
+                .getAsJsonArray(RESULTS_ANSWER);
+        movie.reviews = new ArrayList<>();
+        for(int i = 0; i < reviewsArray.size(); i++) {
+            movie.reviews.add(gson.fromJson(reviewsArray.get(i), Movie.Review.class));
+        }
+
+        // and to get the videos
+        URL videosUrl = buildUrl(null, MOVIE_PATH, movieID, VIDEOS_PATH);
+        String videosAnswer = NetworkUtils.getResponseFromHttpUrl(videosUrl);
+        JsonArray videosArray = new JsonParser()
+                .parse(videosAnswer)
+                .getAsJsonObject()
+                .getAsJsonArray(RESULTS_ANSWER);
+        movie.videos = new ArrayList<>();
+        for(int i = 0; i < videosArray.size(); i++){
+            movie.videos.add(gson.fromJson(videosArray.get(i), Movie.MovieVideo.class));
+        }
+
+        return movie;
     }
 
     /**

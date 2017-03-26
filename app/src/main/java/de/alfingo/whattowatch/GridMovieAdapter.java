@@ -14,7 +14,7 @@ import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 
-import de.alfingo.whattowatch.Utilities.MovieDBUtil;
+import de.alfingo.whattowatch.utilities.MovieDBUtil;
 
 /**
  * The adapter for our movies grid. Uses Picasso for handling images.

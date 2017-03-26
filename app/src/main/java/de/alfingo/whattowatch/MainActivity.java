@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
 import android.support.v7.app.AppCompatActivity;
@@ -24,8 +25,8 @@ import java.util.ArrayList;
 import butterknife.BindString;
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import de.alfingo.whattowatch.Utilities.EndlessScrollingRecyclerView;
-import de.alfingo.whattowatch.Utilities.MovieDBUtil;
+import de.alfingo.whattowatch.utilities.EndlessScrollingRecyclerView;
+import de.alfingo.whattowatch.utilities.MovieDBUtil;
 
 public class MainActivity extends AppCompatActivity implements GridMovieAdapter.GridMovieClickListener {
 
@@ -112,7 +113,7 @@ public class MainActivity extends AppCompatActivity implements GridMovieAdapter.
                     if (mCurrentDisplay == selectedDisplay && mRecyclerView.getChildCount() > 0) {
                         mRecyclerView.smoothScrollToPosition(0);
                     } else
-                        startFetchMoviesTask(selectedDisplay);
+                        startFetchMoviesTask(selectedDisplay, 1);
 
                     mCurrentDisplay = selectedDisplay;
 
@@ -127,8 +128,7 @@ public class MainActivity extends AppCompatActivity implements GridMovieAdapter.
         ButterKnife.bind(this);
 
         // getting the shared preferences
-        sharedPreferences = getSharedPreferences(getString(R.string.pref_shared_preferences),
-                MODE_PRIVATE);
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 
         // setting the bottom navigation listener and the checked item
         mBottomNavigationView.setOnNavigationItemSelectedListener(mItemSelectedListener);
@@ -140,7 +140,7 @@ public class MainActivity extends AppCompatActivity implements GridMovieAdapter.
             public void onClick(View v) {
                 mMovieAdapter.setMovies(null);
                 if (taskRunning == null || taskRunning.getStatus().equals(AsyncTask.Status.FINISHED))
-                    startFetchMoviesTask(-1);
+                    startFetchMoviesTask(mCurrentDisplay, 1);
             }
         });
 
@@ -153,12 +153,13 @@ public class MainActivity extends AppCompatActivity implements GridMovieAdapter.
                 new EndlessScrollingRecyclerView((GridLayoutManager) layoutManager) {
                     @Override
                     public void onLoadMore(int page, int totalItemsCount, RecyclerView view) {
-
+                        startFetchMoviesTask(mCurrentDisplay, page);
                     }
                 };
+        mRecyclerView.addOnScrollListener(endlessScrollingListener);
 
         // starting the fetching task
-        startFetchMoviesTask(-1);
+        startFetchMoviesTask(mCurrentDisplay, 1);
     }
 
     @Override
@@ -188,7 +189,7 @@ public class MainActivity extends AppCompatActivity implements GridMovieAdapter.
     @Override
     public void onClick(Movie movieClicked) {
         Intent detailsIntent = new Intent(this, MovieDetailsActivity.class);
-        detailsIntent.putExtra(Movie.KEY_EXTRA_MOVIE, movieClicked);
+        detailsIntent.setAction(String.valueOf(movieClicked.id));
         startActivity(detailsIntent);
     }
 
@@ -216,10 +217,12 @@ public class MainActivity extends AppCompatActivity implements GridMovieAdapter.
             sortBy = 0;
         }
 
-        mMovieAdapter.setMovies(null);
+        // we only want to reset grid if we just changed display.
+        if (page == 1)
+            mMovieAdapter.setMovies(null);
         if (taskRunning != null)
             taskRunning.cancel(true);
-        taskRunning = new FetchMoviesTask().execute(sortBy);
+        taskRunning = new FetchMoviesTask().execute(sortBy, page);
     }
 
     /**
@@ -227,6 +230,8 @@ public class MainActivity extends AppCompatActivity implements GridMovieAdapter.
      * is done with the help of the Utilities classes.
      */
     private class FetchMoviesTask extends AsyncTask<Integer, Void, ArrayList<Movie>> {
+
+        boolean firstPage;
 
         @Override
         protected void onPreExecute() {
@@ -242,12 +247,14 @@ public class MainActivity extends AppCompatActivity implements GridMovieAdapter.
                 if (params.length > 1)
                     pageIndex = params[1];
                 movies = MovieDBUtil.getAllMovies(MainActivity.this, params[0], pageIndex);
+                firstPage = pageIndex == 1;
             } catch (JsonParseException e) {
                 e.printStackTrace();
             } catch (IOException e) {
                 // TODO: 23.01.2017 Show different messages for different errors.
                 e.printStackTrace();
             }
+
             return movies;
         }
 
@@ -256,7 +263,10 @@ public class MainActivity extends AppCompatActivity implements GridMovieAdapter.
             super.onPostExecute(movies);
             mProgressBar.setVisibility(View.INVISIBLE);
             showError(movies == null);
-            mMovieAdapter.setMovies(movies);
+            if (firstPage)
+                mMovieAdapter.setMovies(movies);
+            else
+                mMovieAdapter.addMovies(movies);
         }
     }
 

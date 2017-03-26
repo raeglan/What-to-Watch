@@ -13,15 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.alfingo.whattowatch.Utilities;
-
-import android.net.Uri;
-import android.util.Log;
+package de.alfingo.whattowatch.utilities;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Scanner;
 

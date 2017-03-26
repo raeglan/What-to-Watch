@@ -1,9 +1,7 @@
 <resources>
-    <!-- Not to be used as String in any view, just the name of the preferences file -->
-    <string name="pref_shared_preferences" translatable="false">
-        de.alfingo.whattowatch.preferences
-    </string>
+    <!-- Preference Strings -->
     <string name="pref_key_display" translatable="false">key_sort_preference</string>
+    <string name="pref_key_favorites" translatable="false">favorite-movies</string>
 
     <string name="app_name">What to Watch</string>
     <string name="action_settings">Settings</string>
