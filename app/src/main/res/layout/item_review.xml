@@ -4,8 +4,10 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:paddingTop="@dimen/text_small_margin"
-    android:paddingBottom="@dimen/text_small_margin">
+    android:layout_marginTop="@dimen/text_small_margin"
+    android:layout_marginBottom="@dimen/text_small_margin"
+    android:background="@color/colorPrimaryLight"
+    android:padding="@dimen/activity_small_half_margin">
 
     <TextView
         android:id="@+id/tv_review_content"

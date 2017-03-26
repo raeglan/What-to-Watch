@@ -8,7 +8,8 @@
     <ImageView
         android:id="@+id/iv_trailer_thumbnail"
         android:layout_width="160dp"
-        android:layout_height="90dp" />
+        android:layout_height="90dp"
+        android:contentDescription="@string/trailers_label"/>
 
     <TextView
         android:id="@+id/tv_trailer_name"
@@ -19,5 +20,6 @@
         android:layout_gravity="center_horizontal|bottom"
         android:gravity="center_horizontal"
         tools:text="Trailer 1"
+        android:background="@color/primaryLightSemiTransparent"
         android:textAppearance="@style/TextAppearance.AppCompat.Caption"/>
 </FrameLayout>

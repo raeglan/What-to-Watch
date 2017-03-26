@@ -33,10 +33,10 @@ public class MoviesContract {
 
         public final static String CREATE_TABLE =
                 "CREATE TABLE " + TABLE_NAME + " (" +
-                        _ID + " INTEGER PRIMARY KEY," +
-                        COLUMN_MOVIE_ID + " INTEGER," +
-                        COLUMN_TITLE + " TEXT," +
-                        COLUMN_POSTER_PATH + " TEXT);";
+                        COLUMN_MOVIE_ID + " INTEGER PRIMARY KEY," +
+                        COLUMN_TITLE + " TEXT NOT NULL," +
+                        COLUMN_POSTER_PATH + " TEXT NOT NULL," +
+                        "UNIQUE (" + COLUMN_MOVIE_ID + ") ON CONFLICT REPLACE);";
 
         public final static String DROP_TABLE =
                 "DROP TABLE IF EXISTS " + TABLE_NAME;

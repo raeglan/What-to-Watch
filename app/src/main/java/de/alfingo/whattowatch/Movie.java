@@ -45,6 +45,7 @@ public class Movie implements Serializable {
      * A POJO for storing the video informations.
      */
     public class MovieVideo {
+        public static final String YOUTUBE = "YouTube";
         public String site;
         public String name;
         public String key;

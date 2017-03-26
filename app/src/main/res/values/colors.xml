@@ -5,4 +5,5 @@
     <color name="colorAccent">#64ffda</color>
     <color name="background">#e0e0e0</color>
     <color name="colorPrimaryLight">#E0F2F1</color>
+    <color name="primaryLightSemiTransparent">#c4e0f2f1</color>
 </resources>

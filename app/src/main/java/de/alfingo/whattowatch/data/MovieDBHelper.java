@@ -9,12 +9,12 @@ import android.database.sqlite.SQLiteOpenHelper;
  * @author Rafael
  * @since 26.03.2017
  */
-public class MovieDBHelper extends SQLiteOpenHelper {
+class MovieDBHelper extends SQLiteOpenHelper {
 
     /**
      * Gets an instance of the DB helper for the What to Watch DB.
      */
-    public MovieDBHelper(Context context) {
+    MovieDBHelper(Context context) {
         super(context, MoviesContract.DB_NAME, null, MoviesContract.DB_VERSION);
     }
 

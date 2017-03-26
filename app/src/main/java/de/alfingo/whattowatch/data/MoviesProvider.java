@@ -9,6 +9,11 @@ import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import java.io.IOException;
+
+import de.alfingo.whattowatch.Movie;
+import de.alfingo.whattowatch.utilities.MovieDBUtil;
+
 /**
  * a simple practically boilerplate content provider.
  * @author Rafael
@@ -78,20 +83,42 @@ public class MoviesProvider extends ContentProvider{
     @Override
     public Uri insert(@NonNull Uri uri, @Nullable ContentValues values) {
         int match = sUriMatcher.match(uri);
-        long rowID;
+        long rowID = -1;
         SQLiteDatabase db = mMovieDBHelper.getWritableDatabase();
 
-        if(match == FAVORITES) {
-            rowID = db.insert(MoviesContract.FavoriteMoviesEntry.TABLE_NAME, null, values);
-        } else
-            throw new UnsupportedOperationException("Unknown uri: " + uri);
+        switch (match) {
+            case FAVORITES:
+                rowID = db.insertWithOnConflict(MoviesContract.FavoriteMoviesEntry.TABLE_NAME,
+                        null, values, SQLiteDatabase.CONFLICT_REPLACE);
+                break;
+            case FAVORITE_WITH_ID:
+
+                try {
+                    String id = uri.getLastPathSegment();
+                    Movie favMovie = MovieDBUtil.getMovie(id);
+                    ContentValues cv = new ContentValues();
+                    cv.put(MoviesContract.FavoriteMoviesEntry.COLUMN_MOVIE_ID,
+                            favMovie.id);
+                    cv.put(MoviesContract.FavoriteMoviesEntry.COLUMN_POSTER_PATH,
+                            favMovie.poster_path);
+                    cv.put(MoviesContract.FavoriteMoviesEntry.COLUMN_TITLE,
+                            favMovie.title);
+                    rowID = db.insertWithOnConflict(MoviesContract.FavoriteMoviesEntry.TABLE_NAME,
+                            null, cv, SQLiteDatabase.CONFLICT_REPLACE);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                break;
+            default:
+                throw new UnsupportedOperationException("Unknown uri: " + uri);
+        }
 
         if(rowID != -1) {
             //noinspection ConstantConditions
             getContext().getContentResolver().notifyChange(uri, null);
         }
 
-        return null;
+        return uri;
     }
 
     @Override
@@ -110,6 +137,7 @@ public class MoviesProvider extends ContentProvider{
                 String idSelection = MoviesContract.FavoriteMoviesEntry.COLUMN_MOVIE_ID + "=?";
                 rowsDeleted = db.delete(MoviesContract.FavoriteMoviesEntry.TABLE_NAME, idSelection,
                         movieID);
+                break;
             default:
                 throw new UnsupportedOperationException("Unknown uri: " + uri);
         }

@@ -28,16 +28,19 @@ import de.alfingo.whattowatch.R;
  * @author Rafael
  * @since 23.01.2017
  */
+@SuppressWarnings("unused")
 public abstract class MovieDBUtil {
 
     private static final String TAG = MovieDBUtil.class.getSimpleName();
 
     /**
-     * URLs for the MovieDB utilities
+     * URLs for the MovieDB utilities and the image servers from other sites.
      */
     private static final String
             MOVIEDB_URL = "https://api.themoviedb.org/3/",
-            IMAGE_SERVER_URL = "http://image.tmdb.org/t/p";
+            IMAGE_SERVER_URL = "http://image.tmdb.org/t/p",
+            YOUTUBE_IMAGE_SERVER_URL = "https://img.youtube.com/vi",
+            YOUTUBE_MOBILE_URL = "https://www.youtube.com";
 
     /**
      * Different query parameters
@@ -46,10 +49,12 @@ public abstract class MovieDBUtil {
             API_PARAM = "api_key",
             PAGE_PARAM = "page",
             REGION_PARAM = "region",
-            LANGUAGE_PARAM = "language";
+            LANGUAGE_PARAM = "language",
+            YOUTUBE_VIDEO_PARAM = "v";
     /**
      * The paths for different queries
      */
+    @SuppressWarnings("WeakerAccess")
     final public static String
             POPULAR_PATH = "popular",
             TOP_PATH = "top_rated",
@@ -57,7 +62,9 @@ public abstract class MovieDBUtil {
             REVIEWS_PATH = "reviews",
             VIDEOS_PATH = "videos",
             IMAGE_SIZE_185_PATH = "w185",
-            IMAGE_SIZE_ORIGINAL_PATH = "original";
+            IMAGE_SIZE_ORIGINAL_PATH = "original",
+            YOUTUBE_STD_QUALITY_PATH = "mqdefault.jpg",
+            YOUTUBE_WATCH_PATH = "watch";
 
     /**
      * Answer constants from the MovieDB JSON
@@ -107,6 +114,7 @@ public abstract class MovieDBUtil {
 
     /**
      * Gets all the movie details, reviews and videos included.
+     *
      * @return a movie object with all the information needed on the details page.
      * @throws IOException if something didn't go quite as planned, duh!
      */
@@ -114,10 +122,7 @@ public abstract class MovieDBUtil {
         Gson gson = new Gson();
 
         // getting the movie object
-        URL movieUrl = buildUrl(null, MOVIE_PATH, movieID);
-        String movieDBAnswer = NetworkUtils.getResponseFromHttpUrl(movieUrl);
-        JsonObject jsonAnswer = new JsonParser().parse(movieDBAnswer).getAsJsonObject();
-        Movie movie = gson.fromJson(jsonAnswer, Movie.class);
+        Movie movie = getMovie(movieID);
 
         // now to get the reviews
         URL reviewsUrl = buildUrl(null, MOVIE_PATH, movieID, REVIEWS_PATH);
@@ -127,7 +132,7 @@ public abstract class MovieDBUtil {
                 .getAsJsonObject()
                 .getAsJsonArray(RESULTS_ANSWER);
         movie.reviews = new ArrayList<>();
-        for(int i = 0; i < reviewsArray.size(); i++) {
+        for (int i = 0; i < reviewsArray.size(); i++) {
             movie.reviews.add(gson.fromJson(reviewsArray.get(i), Movie.Review.class));
         }
 
@@ -139,7 +144,7 @@ public abstract class MovieDBUtil {
                 .getAsJsonObject()
                 .getAsJsonArray(RESULTS_ANSWER);
         movie.videos = new ArrayList<>();
-        for(int i = 0; i < videosArray.size(); i++){
+        for (int i = 0; i < videosArray.size(); i++) {
             movie.videos.add(gson.fromJson(videosArray.get(i), Movie.MovieVideo.class));
         }
 
@@ -147,17 +152,65 @@ public abstract class MovieDBUtil {
     }
 
     /**
+     * Returns a movie from the movie db.
+     *
+     * @param movieID the movie ID for the movie which should be returned
+     * @return the movie POJO
+     * @throws IOException could be said, that something went wrong.
+     */
+    public static Movie getMovie(String movieID) throws IOException {
+        Gson gson = new Gson();
+
+        URL movieUrl = buildUrl(null, MOVIE_PATH, movieID);
+        String movieDBAnswer = NetworkUtils.getResponseFromHttpUrl(movieUrl);
+        JsonObject jsonAnswer = new JsonParser().parse(movieDBAnswer).getAsJsonObject();
+        return gson.fromJson(jsonAnswer, Movie.class);
+    }
+
+    /**
      * Returns the URL path to a picture in the MovieDB server.
      *
      * @param picturePath The path of the picture, to be appended.
-     * @param pSize        which size it should be.
+     * @param pSize       which size it should be.
      * @return the URL, ready to be picasso-ed
      */
     public static Uri getPictureUri(@NonNull String picturePath, @Nullable String pSize) {
-        String size = pSize != null? pSize : IMAGE_SIZE_185_PATH;
+        String size = pSize != null ? pSize : IMAGE_SIZE_185_PATH;
         return Uri.parse(IMAGE_SERVER_URL).buildUpon()
                 .appendPath(size)
                 .appendEncodedPath(picturePath).build();
+    }
+
+    /**
+     * This method gets from the website in question the Uri for the thumbnail image for a video.
+     *
+     * @param site    which site hosts the video, at the moment only youtube is supported
+     * @param filmKey the key for the trailer
+     * @return a formed uri pointing to the thumbnail image
+     */
+    public static Uri getThumbnailUri(@NonNull String site, @NonNull String filmKey) {
+        if (Movie.MovieVideo.YOUTUBE.equalsIgnoreCase(site)) {
+            return Uri.parse(YOUTUBE_IMAGE_SERVER_URL).buildUpon()
+                    .appendPath(filmKey)
+                    .appendPath(YOUTUBE_STD_QUALITY_PATH)
+                    .build();
+        } else
+            throw new UnsupportedOperationException("only youtube images are supported at the moment.");
+    }
+
+    /**
+     * Gets the video Uri for a given film and a site
+     * @param site which site the video is hosted by, only supports youtube for now
+     * @param filmKey the path/ key for the video
+     * @return a built Uri for the video to be played.
+     */
+    public static Uri getVideoUri(@NonNull String site, @NonNull String filmKey) {
+        if(Movie.MovieVideo.YOUTUBE.equalsIgnoreCase(site)) {
+            return Uri.parse(YOUTUBE_MOBILE_URL).buildUpon()
+                    .appendPath(YOUTUBE_WATCH_PATH)
+                    .appendQueryParameter(YOUTUBE_VIDEO_PARAM, filmKey).build();
+        } else
+            throw new UnsupportedOperationException("only youtube videos are supported at the moment.");
     }
 
     /**

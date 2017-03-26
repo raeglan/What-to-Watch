@@ -2,6 +2,9 @@ package de.alfingo.whattowatch;
 
 import android.content.Intent;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -11,14 +14,23 @@ import android.support.v4.app.LoaderManager;
 import android.support.v4.content.AsyncTaskLoader;
 import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.View;
-import android.widget.Toast;
+import android.widget.RatingBar;
+import android.widget.TextView;
 
+import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Target;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Locale;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
 import de.alfingo.whattowatch.data.MoviesContract;
 import de.alfingo.whattowatch.utilities.MovieDBUtil;
 
@@ -29,7 +41,8 @@ import de.alfingo.whattowatch.utilities.MovieDBUtil;
  * @author Rafael Miranda
  * @since 24.01.2017
  */
-public class MovieDetailsActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Movie> {
+public class MovieDetailsActivity extends AppCompatActivity
+        implements LoaderManager.LoaderCallbacks<Movie>, VideosAdapter.MovieClickListener {
 
     static final String TAG = MovieDetailsActivity.class.getSimpleName();
 
@@ -37,78 +50,99 @@ public class MovieDetailsActivity extends AppCompatActivity implements LoaderMan
 
     private static final String MOVIE_ID = "extra-id";
 
+    // all the views
+    @BindView(R.id.ratingBar_details)
+    RatingBar mRatingBar;
+
+    @BindView(R.id.tv_detail_description)
+    TextView mDescriptionTextView;
+
+    @BindView(R.id.tv_detail_rating)
+    TextView mRatingTextView;
+
+    @BindView(R.id.tv_detail_release_date)
+    TextView mReleaseDateTextView;
+
+    @BindView(R.id.rv_trailers)
+    RecyclerView mTrailersRecyclerView;
+
+    @BindView(R.id.rv_reviews)
+    RecyclerView mReviewsRecyclerView;
+
+    @BindView(R.id.fab)
+    FloatingActionButton mFab;
+
+    @BindView(R.id.toolbar_layout_detail)
+    CollapsingToolbarLayout mToolbarLayout;
+
+    @BindView(R.id.toolbar)
+    Toolbar mToolbar;
+
+
     /**
      * Just a hard reference to our target, Picasso only keeps soft references.
      */
     Target mBackgroundTarget;
 
+    /**
+     * If the movie is on the favorite list.
+     */
+    boolean mFavorite;
+
+    /**
+     * As the name suggests, the adapter for displaying reviews.
+     */
+    ReviewsAdapter mReviewsAdapter;
+
+    /**
+     * This will display the trailers
+     */
+    VideosAdapter mVideosAdapter;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_movie_details);
+        ButterKnife.bind(this);
 
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-
-        final CollapsingToolbarLayout toolbarLayout = (CollapsingToolbarLayout)
-                findViewById(R.id.toolbar_layout_detail);
-
-        String movieID = getIntent().getAction();
-
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Toast.makeText(getApplicationContext(),
-                        R.string.under_construction, Toast.LENGTH_SHORT).show();
-            }
-        });
-
+        setSupportActionBar(mToolbar);
         if (getSupportActionBar() != null)
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        /*
-        // get the clicked movie and prepopulate our view.
-        TextView descriptionView = (TextView) findViewById(R.id.tv_detail_description);
-        RatingBar movieRating = (RatingBar) findViewById(R.id.ratingBar_details);
-        TextView ratingDescription = (TextView)  findViewById(R.id.tv_detail_rating);
-        TextView releaseDate = (TextView) findViewById(R.id.tv_detail_release_date);
+        final String movieID = getIntent().getAction();
 
-        String movieID = getIntent().getAction();
-
-        setTitle(mMovie.title);
-        descriptionView.setText(mMovie.overview);
-        float voteAverage = mMovie.vote_average /2;  // the average got is in 10 stars
-        movieRating.setRating(voteAverage);
-        ratingDescription.setText(getString(R.string.ratings_description,
-                voteAverage,
-                mMovie.vote_count));
-        String formattedDate = new SimpleDateFormat("EEE, d MMM yyyy", Locale.getDefault())
-                .format(mMovie.release_date);
-        releaseDate.setText(formattedDate);
-
-        // loading background image
-        mBackgroundTarget = new Target() {
+        // toggles between favorite and not favorite
+        mFab.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
-                toolbarLayout.setBackground(new BitmapDrawable(getResources(), bitmap));
+            public void onClick(View view) {
+                if (movieID != null && !movieID.isEmpty()) {
+                    Uri movieWithID = MoviesContract.FavoriteMoviesEntry.CONTENT_URI
+                            .buildUpon()
+                            .appendPath(movieID)
+                            .build();
+                    if (mFavorite)
+                        getContentResolver().delete(movieWithID, null, null);
+                    else
+                        getContentResolver().insert(movieWithID, null);
+                    mFavorite = !mFavorite;
+                    // if it is a favorite fill the heart with joy and love.
+                    mFab.setImageResource(mFavorite ? R.drawable.ic_favorite_white_24dp :
+                            R.drawable.ic_favorite_border_white_24dp);
+                }
             }
+        });
 
-            @Override
-            public void onBitmapFailed(Drawable errorDrawable) {
-                Log.d(TAG, "Bitmap load failed.");
-            }
-
-            @Override
-            public void onPrepareLoad(Drawable placeHolderDrawable) {
-                Log.d(TAG, "Prepare load of Backdrop.");
-            }
-        };
-        Picasso.with(this)
-                .load(MovieDBUtil.getPictureUri(mMovie.backdrop_path,
-                        MovieDBUtil.IMAGE_SIZE_ORIGINAL_PATH))
-                .into(mBackgroundTarget);
-        */
+        // setting the recycler views, they have both fixed size on the list.
+        mReviewsAdapter = new ReviewsAdapter();
+        mReviewsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        mReviewsRecyclerView.setAdapter(mReviewsAdapter);
+        mReviewsRecyclerView.setHasFixedSize(true);
+        // the videos should scroll horizontally.
+        mVideosAdapter = new VideosAdapter(this);
+        mTrailersRecyclerView.setLayoutManager(
+                new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
+        mTrailersRecyclerView.setAdapter(mVideosAdapter);
+        mTrailersRecyclerView.setHasFixedSize(true);
 
         Bundle loaderArgs = new Bundle();
         loaderArgs.putString(MOVIE_ID, movieID);
@@ -169,11 +203,64 @@ public class MovieDetailsActivity extends AppCompatActivity implements LoaderMan
 
     @Override
     public void onLoadFinished(Loader<Movie> loader, Movie data) {
+        setTitle(data.title);
+        mToolbarLayout.setTitle(data.title);
 
+        // sets the heart to be filled when the movie is a favorite.
+        mFab.setImageResource(data.favorite ?
+                R.drawable.ic_favorite_white_24dp :
+                R.drawable.ic_favorite_border_white_24dp);
+        mFavorite = data.favorite;
+
+        mDescriptionTextView.setText(data.overview);
+        // the average got is in a 10 stars rating
+        float voteAverage = data.vote_average / 2;
+        mRatingBar.setRating(voteAverage);
+        mRatingTextView.setText(getString(R.string.ratings_description,
+                voteAverage, data.vote_count));
+
+        String formattedDate = new SimpleDateFormat("EEE, d MMM yyyy", Locale.getDefault())
+                .format(data.release_date);
+        mReleaseDateTextView.setText(formattedDate);
+
+
+        // loading background image
+        mBackgroundTarget = new Target() {
+            @Override
+            public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
+                mToolbarLayout.setBackground(new BitmapDrawable(getResources(), bitmap));
+            }
+
+            @Override
+            public void onBitmapFailed(Drawable errorDrawable) {
+                Log.d(TAG, "Bitmap load failed.");
+            }
+
+            @Override
+            public void onPrepareLoad(Drawable placeHolderDrawable) {
+                Log.d(TAG, "Prepare load of Backdrop.");
+            }
+        };
+        Picasso.with(this)
+                .load(MovieDBUtil.getPictureUri(data.backdrop_path,
+                        MovieDBUtil.IMAGE_SIZE_ORIGINAL_PATH))
+                .into(mBackgroundTarget);
+
+        // reviews and videos are set now!
+        mReviewsAdapter.swapData(data.reviews);
+        mVideosAdapter.swapData(data.videos);
     }
 
     @Override
     public void onLoaderReset(Loader<Movie> loader) {
 
+    }
+
+    @Override
+    public void onClick(Uri videoUri) {
+        Intent playbackIntent = new Intent(Intent.ACTION_VIEW, videoUri);
+        // to avoid crashing if the user has no browser, youtube or lives under a rock.
+        if (playbackIntent.resolveActivity(getPackageManager()) != null)
+            startActivity(new Intent(Intent.ACTION_VIEW, videoUri));
     }
 }

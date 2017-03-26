@@ -8,6 +8,12 @@
     tools:context="de.alfingo.whattowatch.MovieDetailsActivity"
     tools:showIn="@layout/activity_movie_details">
 
+    <!-- Commentary to the Reviewer:
+        I want to ask why do the view (sometimes) stutter while scrolling down, is this something
+        to do with the ConstraintLayout inside the NestedScrollView or something else?
+        I used the Activity Gallery from android studio to begin building this layout. At first there
+        were a couple of nested LinearLayouts, and they scrolled without a problem! -->
+
     <android.support.constraint.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
@@ -16,9 +22,9 @@
             android:id="@+id/ratingBar_details"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="16dp"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="32dp"
+            android:layout_marginLeft="@dimen/activity_horizontal_margin"
+            android:layout_marginStart="@dimen/activity_horizontal_margin"
+            android:layout_marginTop="@dimen/activity_big_vertical_margin"
             android:isIndicator="true"
             android:numStars="5"
             android:rating="4.5"
@@ -30,21 +36,22 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
-            android:layout_marginLeft="8dp"
-            android:layout_marginStart="8dp"
-            android:layout_marginTop="8dp"
+            android:layout_marginLeft="@dimen/activity_small_margin"
+            android:layout_marginStart="@dimen/activity_small_margin"
+            android:layout_marginRight="@dimen/activity_horizontal_margin"
+            android:layout_marginEnd="@dimen/activity_horizontal_margin"
             android:textAppearance="@style/TextAppearance.AppCompat.Caption"
             app:layout_constraintBottom_toTopOf="@+id/ratingBar_details"
             app:layout_constraintLeft_toRightOf="@+id/ratingBar_details"
             app:layout_constraintTop_toBottomOf="@+id/ratingBar_details"
-            tools:text="@string/ratings_description" />
+            tools:text="@string/ratings_description"
+            app:layout_constraintRight_toRightOf="parent" />
 
         <TextView
             android:id="@+id/description_label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:fontFamily="sans-serif"
+            android:layout_marginTop="@dimen/activity_vertical_margin"
             android:text="@string/movie_description"
             android:textAppearance="@style/TextAppearance.AppCompat.Caption"
             app:layout_constraintLeft_toLeftOf="@+id/ratingBar_details"
@@ -54,21 +61,21 @@
             android:id="@+id/tv_detail_description"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="16dp"
-            android:layout_marginRight="16dp"
-            android:layout_marginTop="8dp"
+            android:layout_marginEnd="@dimen/activity_horizontal_margin"
+            android:layout_marginRight="@dimen/activity_horizontal_margin"
+            android:layout_marginTop="@dimen/activity_small_margin"
             android:textAppearance="@style/TextAppearance.AppCompat.Body1"
             app:layout_constraintLeft_toLeftOf="@+id/description_label"
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/description_label"
-            tools:text="sadasdasda" />
+            tools:text="This is a detailed film description!" />
 
 
         <TextView
             android:id="@+id/release_date_label"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="@dimen/activity_vertical_margin"
             android:text="@string/release_date"
             android:textAppearance="@style/TextAppearance.AppCompat.Caption"
             app:layout_constraintLeft_toLeftOf="@+id/tv_detail_description"
@@ -78,9 +85,8 @@
             android:id="@+id/trailers_label"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="0dp"
             android:layout_marginTop="16dp"
-            android:text="Trailers:"
+            android:text="@string/trailers_label"
             android:textAppearance="@style/TextAppearance.AppCompat.Caption"
             app:layout_constraintLeft_toLeftOf="@+id/tv_detail_release_date"
             app:layout_constraintTop_toBottomOf="@+id/tv_detail_release_date" />
@@ -99,43 +105,32 @@
             android:id="@+id/tv_reviews_label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="0dp"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="@dimen/activity_vertical_margin"
             android:text="@string/reviews_label"
             android:textAppearance="@style/TextAppearance.AppCompat.Caption"
-            app:layout_constraintLeft_toLeftOf="@+id/sv_trailers_scrollview"
-            app:layout_constraintTop_toBottomOf="@+id/sv_trailers_scrollview" />
+            app:layout_constraintLeft_toLeftOf="@+id/trailers_label"
+            app:layout_constraintTop_toBottomOf="@+id/rv_trailers" />
 
         <android.support.v7.widget.RecyclerView
             android:id="@+id/rv_reviews"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="16dp"
-            android:layout_marginRight="16dp"
-            android:layout_marginTop="8dp"
+            android:layout_marginEnd="@dimen/activity_horizontal_margin"
+            android:layout_marginRight="@dimen/activity_horizontal_margin"
+            android:layout_marginTop="@dimen/activity_small_margin"
             app:layout_constraintLeft_toLeftOf="@+id/tv_reviews_label"
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/tv_reviews_label" />
 
-        <ScrollView
-            android:id="@+id/sv_trailers_scrollview"
-            android:layout_width="0dp"
-            android:layout_height="387dp"
-            android:layout_marginLeft="0dp"
-            android:layout_marginTop="8dp"
-            android:orientation="horizontal"
-            app:layout_constraintLeft_toLeftOf="@+id/trailers_label"
-            app:layout_constraintTop_toBottomOf="@+id/trailers_label"
-            tools:layout_editor_absoluteX="8dp"
-            tools:layout_editor_absoluteY="8dp">
 
             <android.support.v7.widget.RecyclerView
                 android:id="@+id/rv_trailers"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal" />
-        </ScrollView>
-
+                android:layout_marginTop="@dimen/activity_small_margin"
+                android:orientation="horizontal"
+                app:layout_constraintTop_toBottomOf="@+id/trailers_label"
+                app:layout_constraintLeft_toLeftOf="parent" />
 
     </android.support.constraint.ConstraintLayout>
 

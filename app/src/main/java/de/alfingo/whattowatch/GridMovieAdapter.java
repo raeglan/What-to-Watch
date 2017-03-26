@@ -24,6 +24,7 @@ import de.alfingo.whattowatch.utilities.MovieDBUtil;
 
 class GridMovieAdapter extends RecyclerView.Adapter<GridMovieAdapter.GridMovieViewHolder>{
 
+    @SuppressWarnings("unused")
     private final static String TAG = GridMovieAdapter.class.getSimpleName();
 
     /**
