@@ -1,4 +1,4 @@
-package de.alfingo.whattowatch.Utilities;
+package de.alfingo.whattowatch.utilities;
 
 /**
  * @author Rafael
