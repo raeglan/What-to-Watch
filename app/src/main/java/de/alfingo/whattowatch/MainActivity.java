@@ -26,7 +26,6 @@ import butterknife.BindInt;
 import butterknife.BindString;
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import butterknife.OnClick;
 import de.alfingo.whattowatch.data.MoviesContract;
 import de.alfingo.whattowatch.utilities.EndlessScrollingRecyclerView;
 import de.alfingo.whattowatch.utilities.MovieDBUtil;

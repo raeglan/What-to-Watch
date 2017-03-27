@@ -24,8 +24,9 @@ import java.util.Scanner;
 /**
  * The utilities that were used on the Sunshine App, modified to fit my moviefile needs.
  */
-public final class NetworkUtils implements APIKeys {
+final class NetworkUtils implements APIKeys {
 
+    @SuppressWarnings("unused")
     private static final String TAG = NetworkUtils.class.getSimpleName();
 
     /**
@@ -35,7 +36,7 @@ public final class NetworkUtils implements APIKeys {
      * @return The contents of the HTTP response.
      * @throws IOException Related to network and stream reading
      */
-    public static String getResponseFromHttpUrl(URL url) throws IOException {
+    static String getResponseFromHttpUrl(URL url) throws IOException {
         HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
         try {
             InputStream in = urlConnection.getInputStream();
