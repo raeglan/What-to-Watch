@@ -45,8 +45,7 @@ public abstract class EndlessScrollingRecyclerView extends RecyclerView.OnScroll
         for (int i = 0; i < lastVisibleItemPositions.length; i++) {
             if (i == 0) {
                 maxSize = lastVisibleItemPositions[i];
-            }
-            else if (lastVisibleItemPositions[i] > maxSize) {
+            } else if (lastVisibleItemPositions[i] > maxSize) {
                 maxSize = lastVisibleItemPositions[i];
             }
         }
@@ -62,7 +61,7 @@ public abstract class EndlessScrollingRecyclerView extends RecyclerView.OnScroll
         int totalItemCount = mLayoutManager.getItemCount();
 
         // only do this if we haven't reached the last page.
-        if(maxPage == -1 || currentPage < maxPage) {
+        if (maxPage == -1 || currentPage < maxPage) {
 
             if (mLayoutManager instanceof StaggeredGridLayoutManager) {
                 int[] lastVisibleItemPositions = ((StaggeredGridLayoutManager) mLayoutManager).findLastVisibleItemPositions(null);
@@ -104,6 +103,7 @@ public abstract class EndlessScrollingRecyclerView extends RecyclerView.OnScroll
     /**
      * Sets the last page number for the content associated with this recycler view, the default
      * is to scroll endlessly, as the name of the class suggests.
+     *
      * @param maxPage the last page index.
      */
     public void setMaxPage(int maxPage) {
@@ -116,6 +116,23 @@ public abstract class EndlessScrollingRecyclerView extends RecyclerView.OnScroll
         this.previousTotalItemCount = 0;
         this.maxPage = -1;
         this.loading = true;
+    }
+
+    /**
+     * Method for getting the last loaded page.
+     * @return the last loaded page
+     */
+    public int getCurrentPage() {
+        return currentPage;
+    }
+
+    /**
+     * Sets the current page, this is if we load something in background without being prompted
+     * by the scroller.
+     * @param page which page was last loaded
+     */
+    public void setCurrentPage(int page) {
+        currentPage = page;
     }
 
     // Defines the process for actually loading more data based on page

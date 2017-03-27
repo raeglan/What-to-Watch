@@ -203,52 +203,58 @@ public class MovieDetailsActivity extends AppCompatActivity
 
     @Override
     public void onLoadFinished(Loader<Movie> loader, Movie data) {
-        setTitle(data.title);
-        mToolbarLayout.setTitle(data.title);
+        if (data != null) { // Otaris: 27.03.2017 Better handling of no internet connection on the details screen.
+            setTitle(data.title);
+            mToolbarLayout.setTitle(data.title);
 
-        // sets the heart to be filled when the movie is a favorite.
-        mFab.setImageResource(data.favorite ?
-                R.drawable.ic_favorite_white_24dp :
-                R.drawable.ic_favorite_border_white_24dp);
-        mFavorite = data.favorite;
+            // sets the heart to be filled when the movie is a favorite.
+            mFab.setImageResource(data.favorite ?
+                    R.drawable.ic_favorite_white_24dp :
+                    R.drawable.ic_favorite_border_white_24dp);
+            mFavorite = data.favorite;
 
-        mDescriptionTextView.setText(data.overview);
-        // the average got is in a 10 stars rating
-        float voteAverage = data.vote_average / 2;
-        mRatingBar.setRating(voteAverage);
-        mRatingTextView.setText(getString(R.string.ratings_description,
-                voteAverage, data.vote_count));
+            mDescriptionTextView.setText(data.overview);
+            // the average got is in a 10 stars rating
+            float voteAverage = data.vote_average / 2;
+            mRatingBar.setRating(voteAverage);
+            mRatingTextView.setText(getString(R.string.ratings_description,
+                    voteAverage, data.vote_count));
 
-        String formattedDate = new SimpleDateFormat("EEE, d MMM yyyy", Locale.getDefault())
-                .format(data.release_date);
-        mReleaseDateTextView.setText(formattedDate);
+            String formattedDate = new SimpleDateFormat("EEE, d MMM yyyy", Locale.getDefault())
+                    .format(data.release_date);
+            mReleaseDateTextView.setText(formattedDate);
 
 
-        // loading background image
-        mBackgroundTarget = new Target() {
-            @Override
-            public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
-                mToolbarLayout.setBackground(new BitmapDrawable(getResources(), bitmap));
-            }
+            // loading background image
+            mBackgroundTarget = new Target() {
+                @Override
+                public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
+                    mToolbarLayout.setBackground(new BitmapDrawable(getResources(), bitmap));
+                }
 
-            @Override
-            public void onBitmapFailed(Drawable errorDrawable) {
-                Log.d(TAG, "Bitmap load failed.");
-            }
+                @Override
+                public void onBitmapFailed(Drawable errorDrawable) {
+                    Log.d(TAG, "Bitmap load failed.");
+                }
 
-            @Override
-            public void onPrepareLoad(Drawable placeHolderDrawable) {
-                Log.d(TAG, "Prepare load of Backdrop.");
-            }
-        };
-        Picasso.with(this)
-                .load(MovieDBUtil.getPictureUri(data.backdrop_path,
-                        MovieDBUtil.IMAGE_SIZE_ORIGINAL_PATH))
-                .into(mBackgroundTarget);
+                @Override
+                public void onPrepareLoad(Drawable placeHolderDrawable) {
+                    Log.d(TAG, "Prepare load of Backdrop.");
+                }
+            };
+            Picasso.with(this)
+                    .load(MovieDBUtil.getPictureUri(data.backdrop_path,
+                            MovieDBUtil.IMAGE_SIZE_ORIGINAL_PATH))
+                    .into(mBackgroundTarget);
 
-        // reviews and videos are set now!
-        mReviewsAdapter.swapData(data.reviews);
-        mVideosAdapter.swapData(data.videos);
+            // reviews and videos are set now!
+            mReviewsAdapter.swapData(data.reviews);
+            mVideosAdapter.swapData(data.videos);
+        } else {
+            setTitle(getString(R.string.offline_detail_title));
+            mToolbarLayout.setTitle(getString(R.string.offline_detail_title));
+            mDescriptionTextView.setText(R.string.offline_detail_description);
+        }
     }
 
     @Override

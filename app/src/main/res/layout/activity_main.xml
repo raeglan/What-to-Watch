@@ -11,6 +11,13 @@
         android:layout_height="0dp"
         android:layout_weight="1">
 
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/rv_main_movies_grid"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:paddingRight="@dimen/activity_small_half_margin"
+            android:paddingLeft="@dimen/activity_small_half_margin" />
+
         <TextView
             android:id="@+id/tv_main_error_msg"
             android:layout_width="match_parent"
@@ -21,13 +28,6 @@
             android:textAlignment="center"
             android:textSize="@dimen/text_size_big"
             android:visibility="invisible" />
-
-        <android.support.v7.widget.RecyclerView
-            android:id="@+id/rv_main_movies_grid"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:paddingRight="@dimen/activity_small_half_margin"
-            android:paddingLeft="@dimen/activity_small_half_margin" />
 
         <!-- TODO: Replace this will a beautiful solution -->
         <ProgressBar

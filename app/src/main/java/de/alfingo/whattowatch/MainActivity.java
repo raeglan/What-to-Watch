@@ -4,7 +4,6 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.PersistableBundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
 import android.support.v7.app.AppCompatActivity;
@@ -27,6 +26,7 @@ import butterknife.BindInt;
 import butterknife.BindString;
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import butterknife.OnClick;
 import de.alfingo.whattowatch.data.MoviesContract;
 import de.alfingo.whattowatch.utilities.EndlessScrollingRecyclerView;
 import de.alfingo.whattowatch.utilities.MovieDBUtil;
@@ -72,6 +72,16 @@ public class MainActivity extends AppCompatActivity implements GridMovieAdapter.
     GridMovieAdapter mMovieAdapter;
 
     /**
+     * The layout manager, for restoring an instance state.
+     */
+    GridLayoutManager mLayoutManager;
+
+    /**
+     * Manages the scrolling action for loading more.
+     */
+    EndlessScrollingRecyclerView mScrollListener;
+
+    /**
      * If the loading task is currently running.
      */
     AsyncTask taskRunning;
@@ -86,6 +96,26 @@ public class MainActivity extends AppCompatActivity implements GridMovieAdapter.
      */
     @BindString(R.string.pref_key_display)
     String KEY_DISPLAY;
+
+    /**
+     * The Key for saving the position of our layout.
+     */
+    final static String KEY_ADAPTER_STATE_BUNDLE = "layout-state";
+
+    /**
+     * The position of the adapter.
+     */
+    final static String KEY_POSITION = "position";
+
+    /**
+     * Which page was last loaded.
+     */
+    final static String KEY_PAGE = "saved_page";
+
+    /**
+     * The saved position.
+     */
+    private Bundle mAdapterStateBundle;
 
     /**
      * The listener here is going to support our bottom navigation.
@@ -136,9 +166,8 @@ public class MainActivity extends AppCompatActivity implements GridMovieAdapter.
         mErrorView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mMovieAdapter.setMovies(null);
                 if (taskRunning == null || taskRunning.getStatus().equals(AsyncTask.Status.FINISHED))
-                    startFetchMoviesTask(mCurrentDisplay, 1);
+                    startFetchMoviesTask(mCurrentDisplay, mScrollListener.getCurrentPage());
             }
         });
 
@@ -147,30 +176,30 @@ public class MainActivity extends AppCompatActivity implements GridMovieAdapter.
         DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
         float dpWidth = displayMetrics.widthPixels / displayMetrics.density;
         int noOfColumns = (int) (dpWidth / 100);
-        RecyclerView.LayoutManager layoutManager = new GridLayoutManager(this, noOfColumns);
-
+        mLayoutManager = new GridLayoutManager(this, noOfColumns);
         mMovieAdapter = new GridMovieAdapter(this);
         mRecyclerView.setAdapter(mMovieAdapter);
-        mRecyclerView.setLayoutManager(layoutManager);
-        EndlessScrollingRecyclerView endlessScrollingListener =
-                new EndlessScrollingRecyclerView((GridLayoutManager) layoutManager) {
+        mRecyclerView.setLayoutManager(mLayoutManager);
+        mScrollListener =
+                new EndlessScrollingRecyclerView(mLayoutManager) {
                     @Override
                     public void onLoadMore(int page, int totalItemsCount, RecyclerView view) {
                         if (mCurrentDisplay != FAVORITE_DISPLAY)
                             startFetchMoviesTask(mCurrentDisplay, page);
                     }
                 };
-        mRecyclerView.addOnScrollListener(endlessScrollingListener);
+        mRecyclerView.addOnScrollListener(mScrollListener);
 
         // if we were already somewhere then we want to get back to it.
         if (savedInstanceState != null) {
+            mAdapterStateBundle = savedInstanceState.getBundle(KEY_ADAPTER_STATE_BUNDLE);
             // this is the only way to do it for now, Google needs to update the bottom navigation
             // to support rotating the display by default.
             mCurrentDisplay = savedInstanceState.getInt(KEY_DISPLAY, TOP_DISPLAY);
             View selectedDisplayView;
-            if(mCurrentDisplay == FAVORITE_DISPLAY)
+            if (mCurrentDisplay == FAVORITE_DISPLAY)
                 selectedDisplayView = findViewById(R.id.navigation_favorites);
-            else if(mCurrentDisplay == POPULAR_DISPLAY)
+            else if (mCurrentDisplay == POPULAR_DISPLAY)
                 selectedDisplayView = findViewById(R.id.navigation_popular);
             else
                 selectedDisplayView = findViewById(R.id.navigation_top_rated);
@@ -183,6 +212,10 @@ public class MainActivity extends AppCompatActivity implements GridMovieAdapter.
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putInt(KEY_DISPLAY, mCurrentDisplay);
+        Bundle adapterState = new Bundle();
+        adapterState.putInt(KEY_POSITION, mLayoutManager.findFirstVisibleItemPosition());
+        adapterState.putInt(KEY_PAGE, mScrollListener.getCurrentPage());
+        outState.putBundle(KEY_ADAPTER_STATE_BUNDLE, adapterState);
     }
 
     @Override
@@ -223,7 +256,7 @@ public class MainActivity extends AppCompatActivity implements GridMovieAdapter.
      */
     private void showError(boolean errorOccurred) {
         mErrorView.setVisibility(errorOccurred ? View.VISIBLE : View.INVISIBLE);
-        mRecyclerView.setVisibility(errorOccurred ? View.INVISIBLE : View.VISIBLE);
+        // mRecyclerView.setVisibility(errorOccurred ? View.INVISIBLE : View.VISIBLE);
     }
 
     /**
@@ -264,6 +297,8 @@ public class MainActivity extends AppCompatActivity implements GridMovieAdapter.
         protected ArrayList<Movie> doInBackground(Integer... params) {
             ArrayList<Movie> movies = null;
 
+            Bundle savedAdapterState = mAdapterStateBundle;
+
             if (params[0] == FAVORITE_DISPLAY) {
                 Cursor cursor = getContentResolver().
                         query(MoviesContract.FavoriteMoviesEntry.CONTENT_URI, null,
@@ -291,9 +326,18 @@ public class MainActivity extends AppCompatActivity implements GridMovieAdapter.
                     int pageIndex = 1;
                     if (params.length > 1)
                         pageIndex = params[1];
-                    movies = MovieDBUtil.getAllMovies(MainActivity.this, params[0], pageIndex);
+                    if (savedAdapterState != null && savedAdapterState.containsKey(KEY_PAGE)) {
+                        int savedPage = savedAdapterState.getInt(KEY_PAGE, 1);
+                        movies = new ArrayList<>();
+                        for(int i = 1; i <= savedPage; i++)
+                            //noinspection ConstantConditions
+                            movies.addAll(MovieDBUtil.getAllMovies(MainActivity.this, params[0], i));
+                        mScrollListener.setCurrentPage(savedPage);
+                    } else
+                        movies = MovieDBUtil.getAllMovies(MainActivity.this, params[0], pageIndex);
                     firstPage = pageIndex == 1;
                 } catch (JsonParseException | IOException e) {
+                    movies = null;
                     e.printStackTrace(); // TODO: 26.03.2017 Show different messages for different errors.
                 }
             }
@@ -313,8 +357,14 @@ public class MainActivity extends AppCompatActivity implements GridMovieAdapter.
 
             if (firstPage || mCurrentDisplay == FAVORITE_DISPLAY)
                 mMovieAdapter.setMovies(movies);
-            else
+            else if (movies != null)
                 mMovieAdapter.addMovies(movies);
+
+            // restoring the state previously assigned.
+            if (mAdapterStateBundle != null) {
+                mRecyclerView.scrollToPosition(mAdapterStateBundle.getInt(KEY_POSITION, 0));
+                mAdapterStateBundle = null;
+            }
         }
     }
 

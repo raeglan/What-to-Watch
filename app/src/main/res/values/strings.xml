@@ -35,5 +35,13 @@
     <string name="trailers_label">Trailers:</string>
     <string name="only_youtube_supported">Only YouTube videos are supported at the moment.</string>
     <string name="no_favorites">No film marked as favorite yet :(</string>
+    <string name="offline_detail_title">Offline: The Return</string>
+    <string name="offline_detail_description">
+        No one thought it would happen, you had no clue it was coming.
+        But the internet connection escaped and now:\n
+        YOU.\n
+        ARE.\n
+        BORED.
+    </string>
 
 </resources>
